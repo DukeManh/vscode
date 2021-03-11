@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { promises } from 'fs';
-import { localize } from 'vs/nls';
 import { process } from 'vs/base/parts/sandbox/electron-sandbox/globals';
 import { AbstractTextFileService } from 'vs/workbench/services/textfile/browser/textFileService';
 import { ITextFileService, ITextFileStreamContent, ITextFileContent, IReadTextFileOptions, IWriteTextFileOptions, TextFileEditorModelState, ITextFileEditorModel } from 'vs/workbench/services/textfile/common/textfiles';
 import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
 import { URI } from 'vs/base/common/uri';
-import { IFileStatWithMetadata, FileOperationError, FileOperationResult, IFileService, ByteSize, getPlatformLimits, Arch } from 'vs/platform/files/common/files';
+import { IFileStatWithMetadata, IFileService, ByteSize, getPlatformLimits, Arch } from 'vs/platform/files/common/files';
 import { Schemas } from 'vs/base/common/network';
 import { join } from 'vs/base/common/path';
 import { ITextResourceConfigurationService } from 'vs/editor/common/services/textResourceConfigurationService';
@@ -140,29 +139,7 @@ export class NativeTextFileService extends AbstractTextFileService {
 			return this.writeElevated(resource, value, options);
 		}
 
-		try {
-			return await super.write(resource, value, options);
-		} catch (error) {
-
-			// In case of permission denied, we need to check for readonly
-			if ((<FileOperationError>error).fileOperationResult === FileOperationResult.FILE_PERMISSION_DENIED) {
-				let isReadonly = false;
-				try {
-					const fileStat = await promises.stat(resource.fsPath);
-					if (!(fileStat.mode & 0o200 /* File mode indicating writable by owner (fs.constants.S_IWUSR) */)) {
-						isReadonly = true;
-					}
-				} catch (error) {
-					// ignore - rethrow original error
-				}
-
-				if (isReadonly) {
-					throw new FileOperationError(localize('fileReadOnlyError', "File is Read Only"), FileOperationResult.FILE_READ_ONLY, options);
-				}
-			}
-
-			throw error;
-		}
+		return super.write(resource, value, options);
 	}
 
 	private async writeElevated(resource: URI, value: string | ITextSnapshot, options?: IWriteTextFileOptions): Promise<IFileStatWithMetadata> {

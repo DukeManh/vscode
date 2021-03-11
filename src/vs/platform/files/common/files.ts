@@ -345,6 +345,7 @@ export enum FileSystemProviderErrorCode {
 	FileIsADirectory = 'EntryIsADirectory',
 	FileExceedsMemoryLimit = 'EntryExceedsMemoryLimit',
 	FileTooLarge = 'EntryTooLarge',
+	FileWriteLocked = 'EntryWriteLocked',
 	NoPermissions = 'NoPermissions',
 	Unavailable = 'Unavailable',
 	Unknown = 'Unknown'
@@ -404,6 +405,7 @@ export function toFileSystemProviderErrorCode(error: Error | undefined | null): 
 		case FileSystemProviderErrorCode.FileNotFound: return FileSystemProviderErrorCode.FileNotFound;
 		case FileSystemProviderErrorCode.FileExceedsMemoryLimit: return FileSystemProviderErrorCode.FileExceedsMemoryLimit;
 		case FileSystemProviderErrorCode.FileTooLarge: return FileSystemProviderErrorCode.FileTooLarge;
+		case FileSystemProviderErrorCode.FileWriteLocked: return FileSystemProviderErrorCode.FileWriteLocked;
 		case FileSystemProviderErrorCode.NoPermissions: return FileSystemProviderErrorCode.NoPermissions;
 		case FileSystemProviderErrorCode.Unavailable: return FileSystemProviderErrorCode.Unavailable;
 	}
@@ -426,6 +428,8 @@ export function toFileOperationResult(error: Error): FileOperationResult {
 			return FileOperationResult.FILE_IS_DIRECTORY;
 		case FileSystemProviderErrorCode.FileNotADirectory:
 			return FileOperationResult.FILE_NOT_DIRECTORY;
+		case FileSystemProviderErrorCode.FileWriteLocked:
+			return FileOperationResult.FILE_WRITE_LOCKED;
 		case FileSystemProviderErrorCode.NoPermissions:
 			return FileOperationResult.FILE_PERMISSION_DENIED;
 		case FileSystemProviderErrorCode.FileExists:
@@ -905,7 +909,7 @@ export const enum FileOperationResult {
 	FILE_NOT_MODIFIED_SINCE,
 	FILE_MODIFIED_SINCE,
 	FILE_MOVE_CONFLICT,
-	FILE_READ_ONLY,
+	FILE_WRITE_LOCKED,
 	FILE_PERMISSION_DENIED,
 	FILE_TOO_LARGE,
 	FILE_INVALID_PATH,

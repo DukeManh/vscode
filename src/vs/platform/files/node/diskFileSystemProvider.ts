@@ -193,7 +193,7 @@ export class DiskFileSystemProvider extends Disposable implements
 			// Write content at once
 			await this.write(handle, 0, content, 0, content.byteLength);
 		} catch (error) {
-			throw this.toFileSystemProviderError(error);
+			throw await this.toFileSystemProviderWriteError(resource, error);
 		} finally {
 			if (typeof handle === 'number') {
 				await this.close(handle);
@@ -203,7 +203,7 @@ export class DiskFileSystemProvider extends Disposable implements
 
 	private readonly mapHandleToPos: Map<number, number> = new Map();
 
-	private readonly writeHandles: Set<number> = new Set();
+	private readonly writeHandles: Map<number, URI> = new Map<number, URI>();
 	private canFlush: boolean = true;
 
 	async open(resource: URI, opts: FileOpenOptions): Promise<number> {
@@ -253,12 +253,16 @@ export class DiskFileSystemProvider extends Disposable implements
 
 			// remember that this handle was used for writing
 			if (opts.create) {
-				this.writeHandles.add(handle);
+				this.writeHandles.set(handle, resource);
 			}
 
 			return handle;
 		} catch (error) {
-			throw this.toFileSystemProviderError(error);
+			if (opts.create) {
+				throw await this.toFileSystemProviderWriteError(resource, error);
+			} else {
+				throw this.toFileSystemProviderError(error);
+			}
 		}
 	}
 
@@ -388,7 +392,7 @@ export class DiskFileSystemProvider extends Disposable implements
 
 			return bytesWritten;
 		} catch (error) {
-			throw this.toFileSystemProviderError(error);
+			throw await this.toFileSystemProviderWriteError(this.writeHandles.get(fd), error);
 		} finally {
 			this.updatePos(fd, normalizedPos, bytesWritten);
 		}
@@ -688,6 +692,31 @@ export class DiskFileSystemProvider extends Disposable implements
 		}
 
 		return createFileSystemProviderError(error, code);
+	}
+
+	private async toFileSystemProviderWriteError(resource: URI | undefined, error: NodeJS.ErrnoException): Promise<FileSystemProviderError> {
+		let fileSystemProviderWriteError = this.toFileSystemProviderError(error);
+
+		// If the write error signals permission issues, we try
+		// to read the file's mode to see if the file is write
+		// locked.
+		if (resource && fileSystemProviderWriteError.code === FileSystemProviderErrorCode.NoPermissions) {
+			let isReadonly = false;
+			try {
+				const fileStat = await promises.stat(resource.fsPath);
+				if (!(fileStat.mode & 0o200 /* File mode indicating writable by owner (fs.constants.S_IWUSR) */)) {
+					isReadonly = true;
+				}
+			} catch (error) {
+				// ignore - rethrow original error
+			}
+
+			if (isReadonly) {
+				fileSystemProviderWriteError = createFileSystemProviderError(error, FileSystemProviderErrorCode.FileWriteLocked);
+			}
+		}
+
+		return fileSystemProviderWriteError;
 	}
 
 	//#endregion
