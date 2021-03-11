@@ -52,7 +52,7 @@ export interface IHistoryService {
 	/**
 	 * Get the entire history of editors that were opened.
 	 */
-	getHistory(): ReadonlyArray<IEditorInput | IResourceEditorInput>;
+	getHistory(): Promise<ReadonlyArray<IEditorInput | IResourceEditorInput>>;
 
 	/**
 	 * Removes an entry from history.
@@ -65,14 +65,14 @@ export interface IHistoryService {
 	 *
 	 * @param schemeFilter filter to restrict roots by scheme.
 	 */
-	getLastActiveWorkspaceRoot(schemeFilter?: string): URI | undefined;
+	getLastActiveWorkspaceRoot(schemeFilter?: string): Promise<URI | undefined>;
 
 	/**
 	 * Looking at the editor history, returns the resource of the last file that was opened.
 	 *
 	 * @param schemeFilter filter to restrict roots by scheme.
 	 */
-	getLastActiveFile(schemeFilter: string): URI | undefined;
+	getLastActiveFile(schemeFilter: string): Promise<URI | undefined>;
 
 	/**
 	 * Opens the next used editor if any.

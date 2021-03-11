@@ -34,7 +34,7 @@ suite('Files - FileEditorInput', () => {
 		instantiationService = workbenchInstantiationService({
 			editorService: () => {
 				return new class extends TestEditorService {
-					createEditorInput(input: IResourceEditorInput) {
+					async createEditorInput(input: IResourceEditorInput) {
 						return createFileInput(input.resource);
 					}
 				};
@@ -291,7 +291,7 @@ suite('Files - FileEditorInput', () => {
 			assert.fail('Unexpected serialized file input');
 		}
 
-		const inputWithPreferredResourceDeserialized = factory.deserialize(instantiationService, inputWithPreferredResourceSerialized) as FileEditorInput;
+		const inputWithPreferredResourceDeserialized = await factory.deserialize(instantiationService, inputWithPreferredResourceSerialized) as FileEditorInput;
 		assert.strictEqual(inputWithPreferredResource.resource.toString(), inputWithPreferredResourceDeserialized.resource.toString());
 		assert.strictEqual(inputWithPreferredResource.preferredResource.toString(), inputWithPreferredResourceDeserialized.preferredResource.toString());
 

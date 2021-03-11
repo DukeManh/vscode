@@ -117,7 +117,7 @@ suite('Files - TextFileEditorTracker', () => {
 	async function testDirtyTextFileModelOpensEditorDependingOnAutoSaveSetting(resource: URI, autoSave: boolean, error: boolean): Promise<void> {
 		const accessor = await createTracker(autoSave);
 
-		assert.ok(!accessor.editorService.isOpen(accessor.editorService.createEditorInput({ resource, forceFile: true })));
+		assert.ok(!accessor.editorService.isOpen(await accessor.editorService.createEditorInput({ resource, forceFile: true })));
 
 		if (error) {
 			accessor.textFileService.setWriteErrorOnce(new FileOperationError('fail to write', FileOperationResult.FILE_OTHER_ERROR));
@@ -131,13 +131,13 @@ suite('Files - TextFileEditorTracker', () => {
 			await model.save();
 			await timeout(100);
 			if (error) {
-				assert.ok(accessor.editorService.isOpen(accessor.editorService.createEditorInput({ resource, forceFile: true })));
+				assert.ok(accessor.editorService.isOpen(await accessor.editorService.createEditorInput({ resource, forceFile: true })));
 			} else {
-				assert.ok(!accessor.editorService.isOpen(accessor.editorService.createEditorInput({ resource, forceFile: true })));
+				assert.ok(!accessor.editorService.isOpen(await accessor.editorService.createEditorInput({ resource, forceFile: true })));
 			}
 		} else {
 			await awaitEditorOpening(accessor.editorService);
-			assert.ok(accessor.editorService.isOpen(accessor.editorService.createEditorInput({ resource, forceFile: true })));
+			assert.ok(accessor.editorService.isOpen(await accessor.editorService.createEditorInput({ resource, forceFile: true })));
 		}
 	}
 
@@ -164,7 +164,7 @@ suite('Files - TextFileEditorTracker', () => {
 
 		const resource = toResource.call(this, '/path/index.txt');
 
-		await accessor.editorService.openEditor(accessor.editorService.createEditorInput({ resource, forceFile: true }));
+		await accessor.editorService.openEditor(await accessor.editorService.createEditorInput({ resource, forceFile: true }));
 
 		accessor.hostService.setFocus(false);
 		accessor.hostService.setFocus(true);

@@ -79,7 +79,7 @@ export class NotebookEditorWidgetService implements INotebookEditorService {
 		// we use the open override to spy on tab movements because that's the only
 		// way to do that...
 		this._disposables.add(editorService.overrideOpenEditor({
-			open: (input, _options, group, context) => {
+			open: async (input, _options, group, context) => {
 				if (input instanceof NotebookEditorInput && context === OpenEditorContext.MOVE_EDITOR) {
 					// when moving a notebook editor we release it from its current tab and we
 					// "place" it into its future slot so that the editor can pick it up from there

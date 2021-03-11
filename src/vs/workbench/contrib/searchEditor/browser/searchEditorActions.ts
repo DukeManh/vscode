@@ -107,7 +107,7 @@ export const openNewSearchEditor =
 		const configurationResolverService = accessor.get(IConfigurationResolverService);
 		const workspaceContextService = accessor.get(IWorkspaceContextService);
 		const historyService = accessor.get(IHistoryService);
-		const activeWorkspaceRootUri = historyService.getLastActiveWorkspaceRoot(Schemas.file);
+		const activeWorkspaceRootUri = await historyService.getLastActiveWorkspaceRoot(Schemas.file);
 		const lastActiveWorkspaceRoot = activeWorkspaceRootUri ? withNullAsUndefined(workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri)) : undefined;
 
 

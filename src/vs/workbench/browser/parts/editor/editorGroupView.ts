@@ -271,11 +271,11 @@ export class EditorGroupView extends Themable implements IEditorGroupView {
 	private registerContainerListeners(): void {
 
 		// Open new file via doubleclick on empty container
-		this._register(addDisposableListener(this.element, EventType.DBLCLICK, e => {
+		this._register(addDisposableListener(this.element, EventType.DBLCLICK, async e => {
 			if (this.isEmpty) {
 				EventHelper.stop(e);
 
-				this.openEditor(this.editorService.createEditorInput({ forceUntitled: true }), EditorOptions.create({ pinned: true }));
+				this.openEditor(await this.editorService.createEditorInput({ forceUntitled: true }), EditorOptions.create({ pinned: true }));
 			}
 		}));
 

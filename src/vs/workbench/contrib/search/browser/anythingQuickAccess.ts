@@ -259,7 +259,7 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		return toDisposable(() => this.clearDecorations(activeEditorControl));
 	}
 
-	protected getPicks(originalFilter: string, disposables: DisposableStore, token: CancellationToken): Picks<IAnythingQuickPickItem> | Promise<Picks<IAnythingQuickPickItem>> | FastAndSlowPicks<IAnythingQuickPickItem> | null {
+	protected async getPicks(originalFilter: string, disposables: DisposableStore, token: CancellationToken): Promise<Promise<Picks<IAnythingQuickPickItem>> | Promise<FastAndSlowPicks<IAnythingQuickPickItem>> | null> {
 
 		// Find a suitable range from the pattern looking for ":", "#" or ","
 		// unless we have the `@` editor symbol character inside the filter
@@ -314,10 +314,10 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		// search without prior filtering, you could not paste a file name
 		// including the `@` character to open it (e.g. /some/file@path)
 		// refs: https://github.com/microsoft/vscode/issues/93845
-		return this.doGetPicks(filter, { enableEditorSymbolSearch: lastWasFiltering }, disposables, token);
+		return await this.doGetPicks(filter, { enableEditorSymbolSearch: lastWasFiltering }, disposables, token);
 	}
 
-	private doGetPicks(filter: string, options: { enableEditorSymbolSearch: boolean }, disposables: DisposableStore, token: CancellationToken): Picks<IAnythingQuickPickItem> | Promise<Picks<IAnythingQuickPickItem>> | FastAndSlowPicks<IAnythingQuickPickItem> {
+	private async doGetPicks(filter: string, options: { enableEditorSymbolSearch: boolean }, disposables: DisposableStore, token: CancellationToken): Promise<Picks<IAnythingQuickPickItem> | FastAndSlowPicks<IAnythingQuickPickItem>> {
 		const query = prepareQuery(filter);
 
 		// Return early if we have editor symbol picks. We support this by:
@@ -339,7 +339,7 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		}
 
 		// Otherwise return normally with history and file/symbol results
-		const historyEditorPicks = this.getEditorHistoryPicks(query);
+		const historyEditorPicks = await this.getEditorHistoryPicks(query);
 
 		return {
 
@@ -428,12 +428,12 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 
 	private readonly labelOnlyEditorHistoryPickAccessor = new QuickPickItemScorerAccessor({ skipDescription: true });
 
-	private getEditorHistoryPicks(query: IPreparedQuery): Array<IAnythingQuickPickItem> {
+	private async getEditorHistoryPicks(query: IPreparedQuery): Promise<Array<IAnythingQuickPickItem>> {
 		const configuration = this.configuration;
 
 		// Just return all history entries if not searching
 		if (!query.normalized) {
-			return this.historyService.getHistory().map(editor => this.createAnythingPick(editor, configuration));
+			return (await this.historyService.getHistory()).map((editor: IEditorInput | IResourceEditorInput | URI) => this.createAnythingPick(editor, configuration));
 		}
 
 		if (!this.configuration.includeHistory) {
@@ -443,7 +443,7 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		// Perform filtering
 		const editorHistoryScorerAccessor = query.containsPathSeparator ? quickPickItemScorerAccessor : this.labelOnlyEditorHistoryPickAccessor; // Only match on label of the editor unless the search includes path separators
 		const editorHistoryPicks: Array<IAnythingQuickPickItem> = [];
-		for (const editor of this.historyService.getHistory()) {
+		for (const editor of await this.historyService.getHistory()) {
 			const resource = editor.resource;
 			if (!resource || (!this.fileService.canHandleResource(resource) && resource.scheme !== Schemas.untitled)) {
 				continue; // exclude editors without file resource if we are searching by pattern

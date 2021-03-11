@@ -68,10 +68,10 @@ export class WebviewEditorInputFactory implements IEditorInputFactory {
 		}
 	}
 
-	public deserialize(
+	public async deserialize(
 		_instantiationService: IInstantiationService,
 		serializedEditorInput: string
-	): WebviewInput {
+	): Promise<WebviewInput> {
 		const data = this.fromJson(JSON.parse(serializedEditorInput));
 		return this._webviewWorkbenchService.reviveWebview({
 			id: data.id,

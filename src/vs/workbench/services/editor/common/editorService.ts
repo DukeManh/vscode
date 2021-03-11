@@ -35,7 +35,7 @@ export interface IOpenEditorOverrideEntry {
 }
 
 export interface IOpenEditorOverrideHandler {
-	open(editor: IEditorInput, options: IEditorOptions | ITextEditorOptions | undefined, group: IEditorGroup, context: OpenEditorContext): IOpenEditorOverride | undefined;
+	open(editor: IEditorInput, options: IEditorOptions | ITextEditorOptions | undefined, group: IEditorGroup, context: OpenEditorContext): Promise<IOpenEditorOverride | undefined>;
 	getEditorOverrides?(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): IOpenEditorOverrideEntry[];
 }
 
@@ -230,7 +230,7 @@ export interface IEditorService {
 	/**
 	 * Get all available editor overrides for the editor input.
 	 */
-	getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): [IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][];
+	getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): Promise<[IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][]>;
 
 	/**
 	 * Allows to override the opening of editors by installing a handler that will
@@ -242,7 +242,7 @@ export interface IEditorService {
 	/**
 	 * Converts a lightweight input to a workbench editor input.
 	 */
-	createEditorInput(input: IResourceEditorInputType): IEditorInput;
+	createEditorInput(input: IResourceEditorInputType): Promise<IEditorInput>;
 
 	/**
 	 * Save the provided list of editors.

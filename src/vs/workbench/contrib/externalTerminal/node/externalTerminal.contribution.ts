@@ -30,12 +30,12 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 		const historyService = accessor.get(IHistoryService);
 		// Open external terminal in local workspaces
 		const terminalService = accessor.get(IExternalTerminalService);
-		const root = historyService.getLastActiveWorkspaceRoot(Schemas.file);
+		const root = await historyService.getLastActiveWorkspaceRoot(Schemas.file);
 		if (root) {
 			terminalService.openTerminal(root.fsPath);
 		} else {
 			// Opens current file's folder, if no folder is open in editor
-			const activeFile = historyService.getLastActiveFile(Schemas.file);
+			const activeFile = await historyService.getLastActiveFile(Schemas.file);
 			if (activeFile) {
 				terminalService.openTerminal(paths.dirname(activeFile.fsPath));
 			} else {

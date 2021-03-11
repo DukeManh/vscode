@@ -209,7 +209,7 @@ suite('Workbench editor groups', () => {
 			return JSON.stringify(testInput);
 		}
 
-		deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput | undefined {
+		async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput | undefined> {
 			if (TestEditorInputFactory.disableDeserialize) {
 				return undefined;
 			}

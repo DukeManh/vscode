@@ -440,11 +440,11 @@ export class TestHistoryService implements IHistoryService {
 	removeFromHistory(_input: IEditorInput | IResourceEditorInput): void { }
 	clear(): void { }
 	clearRecentlyOpened(): void { }
-	getHistory(): ReadonlyArray<IEditorInput | IResourceEditorInput> { return []; }
+	async getHistory(): Promise<readonly (IEditorInput | IResourceEditorInput)[]> { return []; }
 	openNextRecentlyUsedEditor(group?: GroupIdentifier): void { }
 	openPreviouslyUsedEditor(group?: GroupIdentifier): void { }
-	getLastActiveWorkspaceRoot(_schemeFilter: string): URI | undefined { return this.root; }
-	getLastActiveFile(_schemeFilter: string): URI | undefined { return undefined; }
+	async getLastActiveWorkspaceRoot(_schemeFilter: string): Promise<URI | undefined> { return this.root; }
+	async getLastActiveFile(_schemeFilter: string): Promise<URI | undefined> { return undefined; }
 	openLastEditLocation(): void { }
 }
 
@@ -766,7 +766,7 @@ export class TestEditorService implements EditorServiceImpl {
 	constructor(private editorGroupService?: IEditorGroupsService) { }
 	getEditors() { return []; }
 	findEditors() { return []; }
-	getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): [IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][] { return []; }
+	async getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): Promise<[IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][]> { return []; }
 	overrideOpenEditor(_handler: IOpenEditorOverrideHandler): IDisposable { return toDisposable(() => undefined); }
 	openEditor(editor: IEditorInput, options?: IEditorOptions | ITextEditorOptions, group?: IEditorGroup | GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE): Promise<IEditorPane | undefined>;
 	openEditor(editor: IResourceEditorInput | IUntitledTextResourceEditorInput, group?: IEditorGroup | GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE): Promise<ITextEditorPane | undefined>;
@@ -784,7 +784,7 @@ export class TestEditorService implements EditorServiceImpl {
 	openEditors(_editors: any, _group?: any): Promise<IEditorPane[]> { throw new Error('not implemented'); }
 	isOpen(_editor: IEditorInput | IResourceEditorInput): boolean { return false; }
 	replaceEditors(_editors: any, _group: any) { return Promise.resolve(undefined); }
-	createEditorInput(_input: IResourceEditorInput | IUntitledTextResourceEditorInput | IResourceDiffEditorInput): EditorInput { throw new Error('not implemented'); }
+	createEditorInput(_input: IResourceEditorInput | IUntitledTextResourceEditorInput | IResourceDiffEditorInput): Promise<EditorInput> { throw new Error('not implemented'); }
 	save(editors: IEditorIdentifier[], options?: ISaveEditorsOptions): Promise<boolean> { throw new Error('Method not implemented.'); }
 	saveAll(options?: ISaveEditorsOptions): Promise<boolean> { throw new Error('Method not implemented.'); }
 	revert(editors: IEditorIdentifier[], options?: IRevertOptions): Promise<boolean> { throw new Error('Method not implemented.'); }
@@ -1249,7 +1249,7 @@ export function registerTestEditor(id: string, inputs: SyncDescriptor<EditorInpu
 				return JSON.stringify(testInput);
 			}
 
-			deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
+			async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput> {
 				let testInput: ISerializedTestInput = JSON.parse(serializedEditorInput);
 
 				return new TestFileEditorInput(URI.parse(testInput.resource), factoryInputId!);

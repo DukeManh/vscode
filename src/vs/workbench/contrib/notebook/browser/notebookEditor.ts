@@ -167,7 +167,7 @@ export class NotebookEditor extends EditorPane {
 				[{
 					label: localize('fail.reOpen', "Reopen file with VS Code standard text editor"),
 					run: async () => {
-						const fileEditorInput = this._editorService.createEditorInput({ resource: input.resource, forceFile: true });
+						const fileEditorInput = await this._editorService.createEditorInput({ resource: input.resource, forceFile: true });
 						const textOptions: IEditorOptions | ITextEditorOptions = { ...options, override: EditorOverride.DISABLED };
 						await this._editorService.openEditor(fileEditorInput, textOptions);
 					}

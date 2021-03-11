@@ -751,7 +751,7 @@ export class WelcomeInputFactory implements IEditorInputFactory {
 		return '{}';
 	}
 
-	public deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): WalkThroughInput {
+	public async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<WalkThroughInput> {
 		return instantiationService.createInstance(WelcomePage)
 			.editorInput;
 	}

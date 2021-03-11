@@ -455,7 +455,7 @@ export class GlobalCompareResourcesAction extends Action {
 
 			// Compare with next editor that opens
 			const toDispose = this.editorService.overrideOpenEditor({
-				open: editor => {
+				open: async editor => {
 
 					// Only once!
 					toDispose.dispose();

@@ -191,7 +191,7 @@ export class TerminalProcessManager extends Disposable implements ITerminalProce
 					});
 				}
 
-				const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot();
+				const activeWorkspaceRootUri = await this._historyService.getLastActiveWorkspaceRoot();
 
 				// this is a copy of what the merged environment collection is on the remote side
 				await this._setupEnvVariableInfo(activeWorkspaceRootUri, shellLaunchConfig);
@@ -325,7 +325,7 @@ export class TerminalProcessManager extends Disposable implements ITerminalProce
 		userHome: string | undefined,
 		isScreenReaderModeEnabled: boolean
 	): Promise<ITerminalChildProcess> {
-		const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot(Schemas.file);
+		const activeWorkspaceRootUri = await this._historyService.getLastActiveWorkspaceRoot(Schemas.file);
 		const lastActiveWorkspace = activeWorkspaceRootUri ? withNullAsUndefined(this._workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri)) : undefined;
 		if (!shellLaunchConfig.executable) {
 			const defaultConfig = await this._terminalInstanceService.getDefaultShellAndArgs(false);

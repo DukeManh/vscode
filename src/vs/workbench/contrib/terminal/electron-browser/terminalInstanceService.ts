@@ -75,7 +75,7 @@ export class TerminalInstanceService extends Disposable implements ITerminalInst
 
 	public async getDefaultShellAndArgs(useAutomationShell: boolean, platformOverride: Platform = platform): Promise<{ shell: string, args: string | string[] }> {
 		const isWorkspaceShellAllowed = this._isWorkspaceShellAllowed();
-		const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot();
+		const activeWorkspaceRootUri = await this._historyService.getLastActiveWorkspaceRoot();
 		let lastActiveWorkspace = activeWorkspaceRootUri ? this._workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri) : undefined;
 		lastActiveWorkspace = lastActiveWorkspace === null ? undefined : lastActiveWorkspace;
 

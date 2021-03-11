@@ -79,10 +79,10 @@ export class CustomEditorInputFactory extends WebviewEditorInputFactory {
 		};
 	}
 
-	public deserialize(
+	public async deserialize(
 		_instantiationService: IInstantiationService,
 		serializedEditorInput: string
-	): CustomEditorInput {
+	): Promise<CustomEditorInput> {
 		const data = this.fromJson(JSON.parse(serializedEditorInput));
 		const webview = reviveWebview(this._webviewService, data);
 		const customInput = this._instantiationService.createInstance(CustomEditorInput, data.editorResource, data.viewType, data.id, webview, { startsDirty: data.dirty, backupId: data.backupId });

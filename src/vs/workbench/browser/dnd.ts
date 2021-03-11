@@ -230,7 +230,7 @@ export class ResourcesDropHandler {
 
 		// Untitled: always ensure that we open a new untitled editor for each file we drop
 		if (droppedDirtyEditor.resource.scheme === Schemas.untitled) {
-			const untitledEditorResource = this.editorService.createEditorInput({ mode: droppedDirtyEditor.mode, encoding: droppedDirtyEditor.encoding, forceUntitled: true }).resource;
+			const untitledEditorResource = (await this.editorService.createEditorInput({ mode: droppedDirtyEditor.mode, encoding: droppedDirtyEditor.encoding, forceUntitled: true })).resource;
 			if (untitledEditorResource) {
 				droppedDirtyEditor.resource = untitledEditorResource;
 			}

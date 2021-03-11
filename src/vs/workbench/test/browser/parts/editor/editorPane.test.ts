@@ -60,8 +60,8 @@ class MyInputFactory implements IEditorInputFactory {
 		return input.toString();
 	}
 
-	deserialize(instantiationService: IInstantiationService, raw: string): EditorInput {
-		return {} as EditorInput;
+	deserialize(instantiationService: IInstantiationService, raw: string): Promise<EditorInput> {
+		return Promise.resolve({} as EditorInput);
 	}
 }
 

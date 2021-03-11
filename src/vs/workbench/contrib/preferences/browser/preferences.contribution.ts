@@ -115,7 +115,7 @@ class KeybindingsEditorInputFactory implements IEditorInputFactory {
 		});
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput> {
 		return instantiationService.createInstance(KeybindingsEditorInput);
 	}
 }
@@ -130,7 +130,7 @@ class SettingsEditor2InputFactory implements IEditorInputFactory {
 		return '{}';
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): SettingsEditor2Input {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<SettingsEditor2Input> {
 		return instantiationService.createInstance(SettingsEditor2Input);
 	}
 }
@@ -154,10 +154,10 @@ class DefaultPreferencesEditorInputFactory implements IEditorInputFactory {
 		return JSON.stringify(serialized);
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
+	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput> {
 		const deserialized: ISerializedDefaultPreferencesEditorInput = JSON.parse(serializedEditorInput);
 
-		return instantiationService.createInstance(DefaultPreferencesEditorInput, URI.parse(deserialized.resource));
+		return Promise.resolve(instantiationService.createInstance(DefaultPreferencesEditorInput, URI.parse(deserialized.resource)));
 	}
 }
 

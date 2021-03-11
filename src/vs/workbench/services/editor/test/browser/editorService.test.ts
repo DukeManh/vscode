@@ -235,51 +235,51 @@ suite('EditorService', () => {
 		assert.strictEqual(part.activeGroup.getIndexOfEditor(replaceInput), 0);
 	});
 
-	test('caching', function () {
+	test('caching', async function () {
 		const instantiationService = workbenchInstantiationService();
 		const service = instantiationService.createInstance(EditorService);
 
 		// Cached Input (Files)
 		const fileResource1 = toResource.call(this, '/foo/bar/cache1.js');
-		const fileEditorInput1 = service.createEditorInput({ resource: fileResource1 });
+		const fileEditorInput1 = await service.createEditorInput({ resource: fileResource1 });
 		assert.ok(fileEditorInput1);
 
 		const fileResource2 = toResource.call(this, '/foo/bar/cache2.js');
-		const fileEditorInput2 = service.createEditorInput({ resource: fileResource2 });
+		const fileEditorInput2 = await service.createEditorInput({ resource: fileResource2 });
 		assert.ok(fileEditorInput2);
 
 		assert.notStrictEqual(fileEditorInput1, fileEditorInput2);
 
-		const fileEditorInput1Again = service.createEditorInput({ resource: fileResource1 });
+		const fileEditorInput1Again = await service.createEditorInput({ resource: fileResource1 });
 		assert.strictEqual(fileEditorInput1Again, fileEditorInput1);
 
 		fileEditorInput1Again.dispose();
 
 		assert.ok(fileEditorInput1.isDisposed());
 
-		const fileEditorInput1AgainAndAgain = service.createEditorInput({ resource: fileResource1 });
+		const fileEditorInput1AgainAndAgain = await service.createEditorInput({ resource: fileResource1 });
 		assert.notStrictEqual(fileEditorInput1AgainAndAgain, fileEditorInput1);
 		assert.ok(!fileEditorInput1AgainAndAgain.isDisposed());
 
 		// Cached Input (Resource)
 		const resource1 = URI.from({ scheme: 'custom', path: '/foo/bar/cache1.js' });
-		const input1 = service.createEditorInput({ resource: resource1 });
+		const input1 = await service.createEditorInput({ resource: resource1 });
 		assert.ok(input1);
 
 		const resource2 = URI.from({ scheme: 'custom', path: '/foo/bar/cache2.js' });
-		const input2 = service.createEditorInput({ resource: resource2 });
+		const input2 = await service.createEditorInput({ resource: resource2 });
 		assert.ok(input2);
 
 		assert.notStrictEqual(input1, input2);
 
-		const input1Again = service.createEditorInput({ resource: resource1 });
+		const input1Again = await service.createEditorInput({ resource: resource1 });
 		assert.strictEqual(input1Again, input1);
 
 		input1Again.dispose();
 
 		assert.ok(input1.isDisposed());
 
-		const input1AgainAndAgain = service.createEditorInput({ resource: resource1 });
+		const input1AgainAndAgain = await service.createEditorInput({ resource: resource1 });
 		assert.notStrictEqual(input1AgainAndAgain, input1);
 		assert.ok(!input1AgainAndAgain.isDisposed());
 	});
@@ -294,14 +294,14 @@ suite('EditorService', () => {
 		});
 
 		// Untyped Input (file)
-		let input = service.createEditorInput({ resource: toResource.call(this, '/index.html'), options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		let input = await service.createEditorInput({ resource: toResource.call(this, '/index.html'), options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof FileEditorInput);
 		let contentInput = <FileEditorInput>input;
 		assert.strictEqual(contentInput.resource.fsPath, toResource.call(this, '/index.html').fsPath);
 
 		// Untyped Input (file casing)
-		input = service.createEditorInput({ resource: toResource.call(this, '/index.html') });
-		let inputDifferentCase = service.createEditorInput({ resource: toResource.call(this, '/INDEX.html') });
+		input = await service.createEditorInput({ resource: toResource.call(this, '/index.html') });
+		let inputDifferentCase = await service.createEditorInput({ resource: toResource.call(this, '/INDEX.html') });
 
 		if (!isLinux) {
 			assert.strictEqual(input, inputDifferentCase);
@@ -316,64 +316,64 @@ suite('EditorService', () => {
 		assert.strictEqual(service.createEditorInput({ editor: input }), input);
 
 		// Untyped Input (file, encoding)
-		input = service.createEditorInput({ resource: toResource.call(this, '/index.html'), encoding: 'utf16le', options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ resource: toResource.call(this, '/index.html'), encoding: 'utf16le', options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof FileEditorInput);
 		contentInput = <FileEditorInput>input;
 		assert.strictEqual(contentInput.getPreferredEncoding(), 'utf16le');
 
 		// Untyped Input (file, mode)
-		input = service.createEditorInput({ resource: toResource.call(this, '/index.html'), mode });
+		input = await service.createEditorInput({ resource: toResource.call(this, '/index.html'), mode });
 		assert(input instanceof FileEditorInput);
 		contentInput = <FileEditorInput>input;
 		assert.strictEqual(contentInput.getPreferredMode(), mode);
 
 		// Untyped Input (file, different mode)
-		input = service.createEditorInput({ resource: toResource.call(this, '/index.html'), mode: 'text' });
+		input = await service.createEditorInput({ resource: toResource.call(this, '/index.html'), mode: 'text' });
 		assert(input instanceof FileEditorInput);
 		contentInput = <FileEditorInput>input;
 		assert.strictEqual(contentInput.getPreferredMode(), 'text');
 
 		// Untyped Input (untitled)
-		input = service.createEditorInput({ options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 
 		// Untyped Input (untitled with contents)
-		input = service.createEditorInput({ contents: 'Hello Untitled', options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ contents: 'Hello Untitled', options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 		let model = await input.resolve() as UntitledTextEditorModel;
 		assert.strictEqual(model.textEditorModel?.getValue(), 'Hello Untitled');
 
 		// Untyped Input (untitled with mode)
-		input = service.createEditorInput({ mode, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ mode, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 		model = await input.resolve() as UntitledTextEditorModel;
 		assert.strictEqual(model.getMode(), mode);
 
 		// Untyped Input (untitled with file path)
-		input = service.createEditorInput({ resource: URI.file('/some/path.txt'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ resource: URI.file('/some/path.txt'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 		assert.ok((input as UntitledTextEditorInput).model.hasAssociatedFilePath);
 
 		// Untyped Input (untitled with untitled resource)
-		input = service.createEditorInput({ resource: URI.parse('untitled://Untitled-1'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ resource: URI.parse('untitled://Untitled-1'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 		assert.ok(!(input as UntitledTextEditorInput).model.hasAssociatedFilePath);
 
 		// Untyped Input (untitled with custom resource)
 		const provider = instantiationService.createInstance(FileServiceProvider, 'untitled-custom');
 
-		input = service.createEditorInput({ resource: URI.parse('untitled-custom://some/path'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
+		input = await service.createEditorInput({ resource: URI.parse('untitled-custom://some/path'), forceUntitled: true, options: { selection: { startLineNumber: 1, startColumn: 1 } } });
 		assert(input instanceof UntitledTextEditorInput);
 		assert.ok((input as UntitledTextEditorInput).model.hasAssociatedFilePath);
 
 		provider.dispose();
 
 		// Untyped Input (resource)
-		input = service.createEditorInput({ resource: URI.parse('custom:resource') });
+		input = await service.createEditorInput({ resource: URI.parse('custom:resource') });
 		assert(input instanceof ResourceEditorInput);
 
 		// Untyped Input (diff)
-		input = service.createEditorInput({
+		input = await service.createEditorInput({
 			leftResource: toResource.call(this, '/primary.html'),
 			rightResource: toResource.call(this, '/secondary.html')
 		});
@@ -1046,7 +1046,7 @@ suite('EditorService', () => {
 		let overrideCalled = false;
 
 		const handler = service.overrideOpenEditor({
-			open: editor => {
+			open: async editor => {
 				if (editor === input1) {
 					overrideCalled = true;
 

@@ -71,7 +71,7 @@ suite('HistoryService', function () {
 	test('getHistory', async () => {
 		const [part, historyService] = await createServices();
 
-		let history = historyService.getHistory();
+		let history = await historyService.getHistory();
 		assert.strictEqual(history.length, 0);
 
 		const input1 = new TestFileEditorInput(URI.parse('foo://bar1'), TEST_EDITOR_INPUT_ID);
@@ -80,11 +80,11 @@ suite('HistoryService', function () {
 		const input2 = new TestFileEditorInput(URI.parse('foo://bar2'), TEST_EDITOR_INPUT_ID);
 		await part.activeGroup.openEditor(input2, EditorOptions.create({ pinned: true }));
 
-		history = historyService.getHistory();
+		history = await historyService.getHistory();
 		assert.strictEqual(history.length, 2);
 
 		historyService.removeFromHistory(input2);
-		history = historyService.getHistory();
+		history = await historyService.getHistory();
 		assert.strictEqual(history.length, 1);
 		assert.strictEqual(history[0], input1);
 	});

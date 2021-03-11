@@ -357,7 +357,7 @@ CommandsRegistry.registerCommand({
 
 		const uri = getResourceForCommand(resource, accessor.get(IListService), accessor.get(IEditorService));
 		if (uri) {
-			const input = editorService.createEditorInput({ resource: uri });
+			const input = await editorService.createEditorInput({ resource: uri });
 
 			return editorService.openEditor(input, { override: EditorOverride.PICK });
 		}

@@ -252,7 +252,7 @@ export interface IEditorInputFactory {
 	 * Returns an editor input from the provided serialized form of the editor input. This form matches
 	 * the value returned from the serialize() method.
 	 */
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput | undefined;
+	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput | undefined>;
 }
 
 export interface IUntitledTextResourceEditorInput extends IBaseResourceEditorInput {

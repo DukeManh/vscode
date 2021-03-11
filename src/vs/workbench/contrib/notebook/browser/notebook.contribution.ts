@@ -115,7 +115,7 @@ class NotebookDiffEditorFactory implements IEditorInputFactory {
 		});
 	}
 
-	deserialize(instantiationService: IInstantiationService, raw: string) {
+	async deserialize(instantiationService: IInstantiationService, raw: string) {
 		type Data = { resource: URI, originalResource: URI, name: string, originalName: string, viewType: string, textDiffName: string | undefined, group: number };
 		const data = <Data>parse(raw);
 		if (!data) {
@@ -149,7 +149,7 @@ class NotebookEditorFactory implements IEditorInputFactory {
 			viewType: input.viewType,
 		});
 	}
-	deserialize(instantiationService: IInstantiationService, raw: string) {
+	async deserialize(instantiationService: IInstantiationService, raw: string) {
 		type Data = { resource: URI, viewType: string, group: number };
 		const data = <Data>parse(raw);
 		if (!data) {
@@ -264,7 +264,7 @@ export class NotebookContribution extends Disposable implements IWorkbenchContri
 					};
 				});
 			},
-			open: (editor, options, group) => {
+			open: async (editor, options, group) => {
 				return this.onEditorOpening(editor, options, group);
 			}
 		}));

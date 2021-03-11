@@ -1944,12 +1944,12 @@ export class ToggleEditorTypeAction extends Action {
 		const options = activeEditorPane.options;
 		const group = activeEditorPane.group;
 
-		const overrides = this.editorService.getEditorOverrides(activeEditorResource, options, group);
+		const overrides = await this.editorService.getEditorOverrides(activeEditorResource, options, group);
 		const firstNonActiveOverride = overrides.find(([_, entry]) => !entry.active);
 		if (!firstNonActiveOverride) {
 			return;
 		}
 
-		await firstNonActiveOverride[0].open(activeEditorPane.input, { ...options, override: firstNonActiveOverride[1].id }, group, OpenEditorContext.NEW_EDITOR)?.override;
+		await (await firstNonActiveOverride[0].open(activeEditorPane.input, { ...options, override: firstNonActiveOverride[1].id }, group, OpenEditorContext.NEW_EDITOR))?.override;
 	}
 }

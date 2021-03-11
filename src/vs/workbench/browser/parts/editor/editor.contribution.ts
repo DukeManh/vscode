@@ -164,14 +164,14 @@ class UntitledTextEditorInputFactory implements IEditorInputFactory {
 		return JSON.stringify(serialized);
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): UntitledTextEditorInput {
-		return instantiationService.invokeFunction<UntitledTextEditorInput>(accessor => {
+	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<UntitledTextEditorInput> {
+		return instantiationService.invokeFunction<Promise<UntitledTextEditorInput>>(accessor => {
 			const deserialized: ISerializedUntitledTextEditorInput = JSON.parse(serializedEditorInput);
 			const resource = URI.revive(deserialized.resourceJSON);
 			const mode = deserialized.modeId;
 			const encoding = deserialized.encoding;
 
-			return accessor.get(IEditorService).createEditorInput({ resource, mode, encoding, forceUntitled: true }) as UntitledTextEditorInput;
+			return accessor.get(IEditorService).createEditorInput({ resource, mode, encoding, forceUntitled: true }) as Promise<UntitledTextEditorInput>;
 		});
 	}
 }
@@ -237,13 +237,13 @@ export abstract class AbstractSideBySideEditorInputFactory implements IEditorInp
 		return undefined;
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput | undefined {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput | undefined> {
 		const deserialized: ISerializedSideBySideEditorInput = JSON.parse(serializedEditorInput);
 
 		const [secondaryInputFactory, primaryInputFactory] = this.getInputFactories(deserialized.secondaryTypeId, deserialized.primaryTypeId);
 		if (primaryInputFactory && secondaryInputFactory) {
-			const primaryInput = primaryInputFactory.deserialize(instantiationService, deserialized.primarySerialized);
-			const secondaryInput = secondaryInputFactory.deserialize(instantiationService, deserialized.secondarySerialized);
+			const primaryInput = await primaryInputFactory.deserialize(instantiationService, deserialized.primarySerialized);
+			const secondaryInput = await secondaryInputFactory.deserialize(instantiationService, deserialized.secondarySerialized);
 
 			if (primaryInput && secondaryInput) {
 				return this.createEditorInput(instantiationService, deserialized.name, deserialized.description, secondaryInput, primaryInput);

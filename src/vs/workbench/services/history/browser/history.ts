@@ -765,7 +765,7 @@ export class HistoryService extends Disposable implements IHistoryService {
 		}
 
 		// Deserialize and open editor unless already opened
-		const restoredEditor = this.editorInputFactory.getEditorInputFactory(lastClosedEditor.serialized.typeId)?.deserialize(this.instantiationService, lastClosedEditor.serialized.value);
+		const restoredEditor = await this.editorInputFactory.getEditorInputFactory(lastClosedEditor.serialized.typeId)?.deserialize(this.instantiationService, lastClosedEditor.serialized.value);
 		let editorPane: IEditorPane | undefined = undefined;
 		if (restoredEditor && !this.editorGroupService.activeGroup.isOpened(restoredEditor)) {
 			// Fix for https://github.com/microsoft/vscode/issues/107850
@@ -885,8 +885,8 @@ export class HistoryService extends Disposable implements IHistoryService {
 		this.addToHistory(input);
 	}
 
-	private addToHistory(input: IEditorInput | IResourceEditorInput): void {
-		this.ensureHistoryLoaded(this.history);
+	private async addToHistory(input: IEditorInput | IResourceEditorInput): Promise<void> {
+		await this.ensureHistoryLoaded(this.history);
 
 		const historyInput = this.preferResourceEditorInput(input);
 		if (!historyInput) {
@@ -894,11 +894,11 @@ export class HistoryService extends Disposable implements IHistoryService {
 		}
 
 		// Add to beginning
-		this.history.unshift(historyInput);
+		this.history!.unshift(historyInput);
 
 		// Respect max entries setting
-		if (this.history.length > HistoryService.MAX_HISTORY_ITEMS) {
-			this.clearOnEditorDispose(this.history.pop()!, this.editorHistoryListeners);
+		if (this.history!.length > HistoryService.MAX_HISTORY_ITEMS) {
+			this.clearOnEditorDispose(this.history!.pop()!, this.editorHistoryListeners);
 		}
 
 		// Remove this from the history unless the history input is a resource
@@ -918,10 +918,10 @@ export class HistoryService extends Disposable implements IHistoryService {
 		return !this.resourceExcludeMatcher.value.matches(resourceEditorInput.resource);
 	}
 
-	private removeExcludedFromHistory(): void {
-		this.ensureHistoryLoaded(this.history);
+	private async removeExcludedFromHistory(): Promise<void> {
+		await this.ensureHistoryLoaded(this.history);
 
-		this.history = this.history.filter(e => {
+		this.history = this.history!.filter(e => {
 			const include = this.includeInHistory(e);
 
 			// Cleanup any listeners associated with the input when removing from history
@@ -940,10 +940,10 @@ export class HistoryService extends Disposable implements IHistoryService {
 		}
 	}
 
-	removeFromHistory(arg1: IEditorInput | IResourceEditorInput | FileChangesEvent | FileOperationEvent): void {
-		this.ensureHistoryLoaded(this.history);
+	async removeFromHistory(arg1: IEditorInput | IResourceEditorInput | FileChangesEvent | FileOperationEvent): Promise<void> {
+		await this.ensureHistoryLoaded(this.history);
 
-		this.history = this.history.filter(e => {
+		this.history = this.history!.filter(e => {
 			const matches = this.matches(arg1, e);
 
 			// Cleanup any listeners associated with the input when removing from history
@@ -962,19 +962,19 @@ export class HistoryService extends Disposable implements IHistoryService {
 		this.editorHistoryListeners.clear();
 	}
 
-	getHistory(): ReadonlyArray<IEditorInput | IResourceEditorInput> {
-		this.ensureHistoryLoaded(this.history);
+	async getHistory(): Promise<ReadonlyArray<IEditorInput | IResourceEditorInput>> {
+		await this.ensureHistoryLoaded(this.history);
 
-		return this.history.slice(0);
+		return this.history!.slice(0);
 	}
 
-	private ensureHistoryLoaded(history: Array<IEditorInput | IResourceEditorInput> | undefined): asserts history {
+	private async ensureHistoryLoaded(history: Array<IEditorInput | IResourceEditorInput> | undefined): Promise<void> {
 		if (!this.history) {
-			this.history = this.loadHistory();
+			this.history = await this.loadHistory();
 		}
 	}
 
-	private loadHistory(): Array<IEditorInput | IResourceEditorInput> {
+	private async loadHistory(): Promise<Array<IEditorInput | IResourceEditorInput>> {
 		let entries: ISerializedEditorHistoryEntry[] = [];
 
 		const entriesRaw = this.storageService.get(HistoryService.HISTORY_STORAGE_KEY, StorageScope.WORKSPACE);
@@ -986,16 +986,16 @@ export class HistoryService extends Disposable implements IHistoryService {
 			}
 		}
 
-		return coalesce(entries.map(entry => {
+		return coalesce(await Promise.all(entries.map(async entry => {
 			try {
-				return this.safeLoadHistoryEntry(entry);
+				return await this.safeLoadHistoryEntry(entry);
 			} catch (error) {
 				return undefined; // https://github.com/microsoft/vscode/issues/60960
 			}
-		}));
+		})));
 	}
 
-	private safeLoadHistoryEntry(entry: ISerializedEditorHistoryEntry): IEditorInput | IResourceEditorInput | undefined {
+	private async safeLoadHistoryEntry(entry: ISerializedEditorHistoryEntry): Promise<IEditorInput | IResourceEditorInput | undefined> {
 		const serializedEditorHistoryEntry = entry;
 
 		// File resource: via URI.revive()
@@ -1008,7 +1008,7 @@ export class HistoryService extends Disposable implements IHistoryService {
 		if (editorInputJSON?.deserialized) {
 			const factory = this.editorInputFactory.getEditorInputFactory(editorInputJSON.typeId);
 			if (factory) {
-				const input = factory.deserialize(this.instantiationService, editorInputJSON.deserialized);
+				const input = await factory.deserialize(this.instantiationService, editorInputJSON.deserialized);
 				if (input) {
 					this.onEditorDispose(input, () => this.removeFromHistory(input), this.editorHistoryListeners);
 				}
@@ -1053,7 +1053,7 @@ export class HistoryService extends Disposable implements IHistoryService {
 
 	//#region Last Active Workspace/File
 
-	getLastActiveWorkspaceRoot(schemeFilter?: string): URI | undefined {
+	async getLastActiveWorkspaceRoot(schemeFilter?: string): Promise<URI | undefined> {
 
 		// No Folder: return early
 		const folders = this.contextService.getWorkspace().folders;
@@ -1072,7 +1072,7 @@ export class HistoryService extends Disposable implements IHistoryService {
 		}
 
 		// Multiple folders: find the last active one
-		for (const input of this.getHistory()) {
+		for (const input of await this.getHistory()) {
 			if (input instanceof EditorInput) {
 				continue;
 			}
@@ -1099,8 +1099,8 @@ export class HistoryService extends Disposable implements IHistoryService {
 		return undefined;
 	}
 
-	getLastActiveFile(filterByScheme: string): URI | undefined {
-		for (const input of this.getHistory()) {
+	async getLastActiveFile(filterByScheme: string): Promise<URI | undefined> {
+		for (const input of await this.getHistory()) {
 			let resource: URI | undefined;
 			if (input instanceof EditorInput) {
 				resource = EditorResourceAccessor.getOriginalUri(input, { filterByScheme });

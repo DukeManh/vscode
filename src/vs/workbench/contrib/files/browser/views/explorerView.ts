@@ -484,7 +484,7 @@ export class ExplorerView extends ViewPane {
 		}
 	}
 
-	private setContextKeys(stat: ExplorerItem | null | undefined): void {
+	private async setContextKeys(stat: ExplorerItem | null | undefined): Promise<void> {
 		const isSingleFolder = this.contextService.getWorkbenchState() === WorkbenchState.FOLDER;
 		const resource = stat ? stat.resource : isSingleFolder ? this.contextService.getWorkspace().folders[0].uri : null;
 		this.resourceContext.set(resource);
@@ -493,7 +493,7 @@ export class ExplorerView extends ViewPane {
 		this.rootContext.set(!stat || (stat && stat.isRoot));
 
 		if (resource) {
-			const overrides = resource ? this.editorService.getEditorOverrides(resource, undefined, undefined) : [];
+			const overrides = resource ? await this.editorService.getEditorOverrides(resource, undefined, undefined) : [];
 			this.availableEditorIdsContext.set(overrides.map(([, entry]) => entry.id).join(','));
 		} else {
 			this.availableEditorIdsContext.reset();

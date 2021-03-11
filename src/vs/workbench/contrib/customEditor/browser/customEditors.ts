@@ -141,13 +141,13 @@ export class CustomEditorService extends Disposable implements ICustomEditorServ
 		group?: IEditorGroup,
 	): Promise<IEditorPane | undefined> {
 		if (viewType === defaultCustomEditor.id) {
-			const fileEditorInput = this.editorService.createEditorInput({ resource, forceFile: true });
+			const fileEditorInput = await this.editorService.createEditorInput({ resource, forceFile: true });
 			return this.openEditorForResource(resource, fileEditorInput, { ...options, override: EditorOverride.DISABLED }, group);
 		}
 
 		if (!this._contributedEditors.get(viewType)) {
 			// Prompt the user
-			const input = this.editorService.createEditorInput({ resource });
+			const input = await this.editorService.createEditorInput({ resource });
 			return this.editorService.openEditor(input, { override: EditorOverride.PICK });
 		}
 

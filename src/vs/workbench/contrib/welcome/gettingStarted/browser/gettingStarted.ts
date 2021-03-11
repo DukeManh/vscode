@@ -786,7 +786,7 @@ export class GettingStartedInputFactory implements IEditorInputFactory {
 		return JSON.stringify({ selectedCategory: editorInput.selectedCategory, selectedTask: editorInput.selectedTask });
 	}
 
-	public deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): GettingStartedInput {
+	public async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<GettingStartedInput> {
 		try {
 			const { selectedCategory, selectedTask } = JSON.parse(serializedEditorInput);
 			return new GettingStartedInput({ selectedCategory, selectedTask });

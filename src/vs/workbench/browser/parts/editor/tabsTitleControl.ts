@@ -215,7 +215,7 @@ export class TabsTitleControl extends TitleControl {
 
 		// New file when double clicking on tabs container (but not tabs)
 		[TouchEventType.Tap, EventType.DBLCLICK].forEach(eventType => {
-			this._register(addDisposableListener(tabsContainer, eventType, (e: MouseEvent | GestureEvent) => {
+			this._register(addDisposableListener(tabsContainer, eventType, async (e: MouseEvent | GestureEvent) => {
 				if (eventType === EventType.DBLCLICK) {
 					if (e.target !== tabsContainer) {
 						return; // ignore if target is not tabs container
@@ -233,7 +233,7 @@ export class TabsTitleControl extends TitleControl {
 				EventHelper.stop(e);
 
 				this.group.openEditor(
-					this.editorService.createEditorInput({ forceUntitled: true }),
+					await this.editorService.createEditorInput({ forceUntitled: true }),
 					{
 						pinned: true,			// untitled is always pinned
 						index: this.group.count // always at the end

@@ -498,7 +498,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		return toDisposable(() => remove());
 	}
 
-	getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): [IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][] {
+	async getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined): Promise<[IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][]> {
 		const overrides: [IOpenEditorOverrideHandler, IOpenEditorOverrideEntry][] = [];
 
 		// Collect contributed editor open overrides
@@ -514,22 +514,22 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 
 		// Ensure the default one is always present
 		if (!overrides.some(([, entry]) => entry.id === DEFAULT_EDITOR_ASSOCIATION.id)) {
-			overrides.unshift(this.getDefaultEditorOverride(resource));
+			overrides.unshift(await this.getDefaultEditorOverride(resource));
 		}
 
 		return overrides;
 	}
 
-	private getDefaultEditorOverride(resource: URI): [IOpenEditorOverrideHandler, IOpenEditorOverrideEntry] {
+	private async getDefaultEditorOverride(resource: URI): Promise<[IOpenEditorOverrideHandler, IOpenEditorOverrideEntry]> {
 		return [
 			{
-				open: (editor: IEditorInput, options: IEditorOptions | ITextEditorOptions | undefined, group: IEditorGroup) => {
+				open: async (editor: IEditorInput, options: IEditorOptions | ITextEditorOptions | undefined, group: IEditorGroup) => {
 					const resource = EditorResourceAccessor.getOriginalUri(editor);
 					if (!resource) {
 						return;
 					}
 
-					const fileEditorInput = this.createEditorInput({ resource, forceFile: true });
+					const fileEditorInput = await this.createEditorInput({ resource, forceFile: true });
 					const textOptions: IEditorOptions | ITextEditorOptions = { ...options, override: EditorOverride.DISABLED };
 					return {
 						override: (async () => {
@@ -559,13 +559,13 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		];
 	}
 
-	private onGroupWillOpenEditor(group: IEditorGroup, event: IEditorOpeningEvent): void {
+	private async onGroupWillOpenEditor(group: IEditorGroup, event: IEditorOpeningEvent): Promise<void> {
 		if (event.options?.override === EditorOverride.DISABLED) {
 			return; // return early when overrides are explicitly disabled
 		}
 
 		for (const handler of this.openEditorHandlers) {
-			const result = handler.open(event.editor, event.options, group, event.context ?? OpenEditorContext.NEW_EDITOR);
+			const result = await handler.open(event.editor, event.options, group, event.context ?? OpenEditorContext.NEW_EDITOR);
 			const override = result?.override;
 			if (override) {
 				event.prevent((() => override.then(editor => withNullAsUndefined(editor))));
@@ -582,7 +582,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 	openEditor(editor: IResourceEditorInput | IUntitledTextResourceEditorInput, group?: OpenInEditorGroup): Promise<ITextEditorPane | undefined>;
 	openEditor(editor: IResourceDiffEditorInput, group?: OpenInEditorGroup): Promise<ITextDiffEditorPane | undefined>;
 	async openEditor(editor: IEditorInput | IResourceEditorInputType, optionsOrGroup?: IEditorOptions | ITextEditorOptions | OpenInEditorGroup, group?: OpenInEditorGroup): Promise<IEditorPane | undefined> {
-		const result = this.doResolveEditorOpenRequest(editor, optionsOrGroup, group);
+		const result = await this.doResolveEditorOpenRequest(editor, optionsOrGroup, group);
 		if (result) {
 			const [resolvedGroup, resolvedEditor, resolvedOptions] = result;
 
@@ -598,7 +598,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		return undefined;
 	}
 
-	doResolveEditorOpenRequest(editor: IEditorInput | IResourceEditorInputType, optionsOrGroup?: IEditorOptions | ITextEditorOptions | OpenInEditorGroup, group?: OpenInEditorGroup): [IEditorGroup, EditorInput, EditorOptions | undefined] | undefined {
+	async doResolveEditorOpenRequest(editor: IEditorInput | IResourceEditorInputType, optionsOrGroup?: IEditorOptions | ITextEditorOptions | OpenInEditorGroup, group?: OpenInEditorGroup): Promise<[IEditorGroup, EditorInput, EditorOptions | undefined] | undefined> {
 		let resolvedGroup: IEditorGroup | undefined;
 		let candidateGroup: OpenInEditorGroup | undefined;
 
@@ -617,7 +617,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		// Untyped Text Editor Support
 		else {
 			const textInput = <IResourceEditorInputType>editor;
-			typedEditor = this.createEditorInput(textInput);
+			typedEditor = await this.createEditorInput(textInput);
 			if (typedEditor) {
 				typedOptions = TextEditorOptions.from(textInput);
 
@@ -660,7 +660,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 
 		const [editorOverrideHandler, , targetOptions, targetGroup] = editorOverride;
 
-		return editorOverrideHandler.open(editor, targetOptions ?? options, targetGroup ?? group, OpenEditorContext.NEW_EDITOR)?.override;
+		return (await editorOverrideHandler.open(editor, targetOptions ?? options, targetGroup ?? group, OpenEditorContext.NEW_EDITOR))?.override;
 	}
 
 	private async findEditorOverride(override: EditorOverride.PICK | string, editor: IEditorInput, options: IEditorOptions | undefined, group: IEditorGroup): Promise<[IOpenEditorOverrideHandler, IOpenEditorOverrideEntry, IEditorOptions?, IEditorGroup?] | undefined> {
@@ -672,7 +672,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		}
 
 		// Collect all overrides for resource
-		const allEditorOverrides = this.getEditorOverrides(resource, undefined, undefined);
+		const allEditorOverrides = await this.getEditorOverrides(resource, undefined, undefined);
 		if (!allEditorOverrides.length) {
 			return undefined;
 		}
@@ -906,14 +906,14 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 	async openEditors(editors: Array<IEditorInputWithOptions | IResourceEditorInputType>, group?: OpenInEditorGroup): Promise<IEditorPane[]> {
 
 		// Convert to typed editors and options
-		const typedEditors = editors.map(editor => {
+		const typedEditors = await Promise.all(editors.map(async editor => {
 			if (isEditorInputWithOptions(editor)) {
 				return editor;
 			}
 
-			const editorInput: IEditorInputWithOptions = { editor: this.createEditorInput(editor), options: TextEditorOptions.from(editor) };
+			const editorInput: IEditorInputWithOptions = { editor: await this.createEditorInput(editor), options: TextEditorOptions.from(editor) };
 			return editorInput;
-		});
+		}));
 
 		// Find target groups to open
 		const mapGroupToEditors = new Map<IEditorGroup, IEditorInputWithOptions[]>();
@@ -989,7 +989,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 	async replaceEditors(editors: Array<IEditorReplacement | IResourceEditorReplacement>, group: IEditorGroup | GroupIdentifier): Promise<void> {
 		const typedEditors: IEditorReplacement[] = [];
 
-		editors.forEach(replaceEditorArg => {
+		editors.forEach(async replaceEditorArg => {
 			if (replaceEditorArg.editor instanceof EditorInput) {
 				const replacementArg = replaceEditorArg as IEditorReplacement;
 
@@ -1003,8 +1003,8 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 				const replacementArg = replaceEditorArg as IResourceEditorReplacement;
 
 				typedEditors.push({
-					editor: this.createEditorInput(replacementArg.editor),
-					replacement: this.createEditorInput(replacementArg.replacement),
+					editor: await this.createEditorInput(replacementArg.editor),
+					replacement: await this.createEditorInput(replacementArg.replacement),
 					options: this.toOptions(replacementArg.replacement.options)
 				});
 			}
@@ -1022,7 +1022,7 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 
 	private readonly editorInputCache = new ResourceMap<CachedEditorInput>();
 
-	createEditorInput(input: IEditorInputWithOptions | IEditorInput | IResourceEditorInputType): EditorInput {
+	async createEditorInput(input: IEditorInputWithOptions | IEditorInput | IResourceEditorInputType): Promise<EditorInput> {
 
 		// Typed Editor Input Support (EditorInput)
 		if (input instanceof EditorInput) {
@@ -1038,8 +1038,8 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		// Diff Editor Support
 		const resourceDiffInput = input as IResourceDiffEditorInput;
 		if (resourceDiffInput.leftResource && resourceDiffInput.rightResource) {
-			const leftInput = this.createEditorInput({ resource: resourceDiffInput.leftResource, forceFile: resourceDiffInput.forceFile });
-			const rightInput = this.createEditorInput({ resource: resourceDiffInput.rightResource, forceFile: resourceDiffInput.forceFile });
+			const leftInput = await this.createEditorInput({ resource: resourceDiffInput.leftResource, forceFile: resourceDiffInput.forceFile });
+			const rightInput = await this.createEditorInput({ resource: resourceDiffInput.rightResource, forceFile: resourceDiffInput.forceFile });
 
 			return this.instantiationService.createInstance(DiffEditorInput,
 				resourceDiffInput.label,
@@ -1447,7 +1447,7 @@ export class DelegatingEditorService implements IEditorService {
 	openEditor(editor: IResourceEditorInput | IUntitledTextResourceEditorInput, group?: OpenInEditorGroup): Promise<ITextEditorPane | undefined>;
 	openEditor(editor: IResourceDiffEditorInput, group?: OpenInEditorGroup): Promise<ITextDiffEditorPane | undefined>;
 	async openEditor(editor: IEditorInput | IResourceEditorInputType, optionsOrGroup?: IEditorOptions | ITextEditorOptions | OpenInEditorGroup, group?: OpenInEditorGroup): Promise<IEditorPane | undefined> {
-		const result = this.editorService.doResolveEditorOpenRequest(editor, optionsOrGroup, group);
+		const result = await this.editorService.doResolveEditorOpenRequest(editor, optionsOrGroup, group);
 		if (result) {
 			const [resolvedGroup, resolvedEditor, resolvedOptions] = result;
 
@@ -1496,7 +1496,7 @@ export class DelegatingEditorService implements IEditorService {
 	overrideOpenEditor(handler: IOpenEditorOverrideHandler): IDisposable { return this.editorService.overrideOpenEditor(handler); }
 	getEditorOverrides(resource: URI, options: IEditorOptions | undefined, group: IEditorGroup | undefined) { return this.editorService.getEditorOverrides(resource, options, group); }
 
-	createEditorInput(input: IResourceEditorInputType): IEditorInput { return this.editorService.createEditorInput(input); }
+	createEditorInput(input: IResourceEditorInputType): Promise<IEditorInput> { return this.editorService.createEditorInput(input); }
 
 	save(editors: IEditorIdentifier | IEditorIdentifier[], options?: ISaveEditorsOptions): Promise<boolean> { return this.editorService.save(editors, options); }
 	saveAll(options?: ISaveAllEditorsOptions): Promise<boolean> { return this.editorService.saveAll(options); }

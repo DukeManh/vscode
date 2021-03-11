@@ -114,7 +114,7 @@ export class EditorGroup extends Disposable {
 		super();
 
 		if (isSerializedEditorGroup(labelOrSerializedGroup)) {
-			this._id = this.deserialize(labelOrSerializedGroup);
+			this.deserialize(labelOrSerializedGroup).then((number) => this._id = number);
 		} else {
 			this._id = EditorGroup.IDS++;
 		}
@@ -794,7 +794,7 @@ export class EditorGroup extends Disposable {
 		};
 	}
 
-	private deserialize(data: ISerializedEditorGroup): number {
+	private async deserialize(data: ISerializedEditorGroup): Promise<number> {
 		const registry = Registry.as<IEditorInputFactoryRegistry>(Extensions.EditorInputFactories);
 
 		if (typeof data.id === 'number') {
@@ -805,12 +805,12 @@ export class EditorGroup extends Disposable {
 			this._id = EditorGroup.IDS++; // backwards compatibility
 		}
 
-		this.editors = coalesce(data.editors.map((e, index) => {
+		this.editors = coalesce(await Promise.all(data.editors.map(async (e, index) => {
 			let editor: EditorInput | undefined = undefined;
 
 			const factory = registry.getEditorInputFactory(e.id);
 			if (factory) {
-				editor = factory.deserialize(this.instantiationService, e.value);
+				editor = await factory.deserialize(this.instantiationService, e.value);
 				if (editor) {
 					this.registerEditorListeners(editor);
 				}
@@ -821,7 +821,7 @@ export class EditorGroup extends Disposable {
 			}
 
 			return editor;
-		}));
+		})));
 
 		this.mru = coalesce(data.mru.map(i => this.editors[i]));
 

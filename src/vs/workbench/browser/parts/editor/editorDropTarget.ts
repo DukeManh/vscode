@@ -335,7 +335,7 @@ class DropOverlay extends Themable {
 								}
 
 								// Open as untitled file with the provided contents
-								const untitledEditor = this.editorService.createEditorInput({
+								const untitledEditor = await this.editorService.createEditorInput({
 									resource: proposedFilePath,
 									forceUntitled: true,
 									contents: VSBuffer.wrap(new Uint8Array(event.target.result)).toString()

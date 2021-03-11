@@ -195,14 +195,14 @@ export class CustomEditorInput extends LazilyResolvedWebviewEditorInput {
 		return null;
 	}
 
-	rename(group: GroupIdentifier, newResource: URI): { editor: IEditorInput } | undefined {
+	async rename(group: GroupIdentifier, newResource: URI): Promise<{ editor: IEditorInput; } | undefined> {
 		// See if we can keep using the same custom editor provider
 		const editorInfo = this.customEditorService.getCustomEditor(this.viewType);
 		if (editorInfo?.matches(newResource)) {
 			return { editor: this.doMove(group, newResource) };
 		}
 
-		return { editor: this.editorService.createEditorInput({ resource: newResource, forceFile: true }) };
+		return { editor: await this.editorService.createEditorInput({ resource: newResource, forceFile: true }) };
 	}
 
 	private doMove(group: GroupIdentifier, newResource: URI): IEditorInput {

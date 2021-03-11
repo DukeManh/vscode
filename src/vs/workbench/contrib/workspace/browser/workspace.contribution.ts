@@ -254,7 +254,7 @@ class WorkspaceTrustEditorInputFactory implements IEditorInputFactory {
 		return '{}';
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): WorkspaceTrustEditorInput {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<WorkspaceTrustEditorInput> {
 		return instantiationService.createInstance(WorkspaceTrustEditorInput);
 	}
 }

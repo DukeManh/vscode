@@ -478,7 +478,7 @@ function registerOpenEditorAPICommands(): void {
 		}, viewColumnToEditorGroup(editorGroupService, column));
 	});
 
-	CommandsRegistry.registerCommand(API_OPEN_WITH_EDITOR_COMMAND_ID, (accessor: ServicesAccessor, resource: UriComponents, id: string, columnAndOptions?: [EditorGroupColumn?, ITextEditorOptions?]) => {
+	CommandsRegistry.registerCommand(API_OPEN_WITH_EDITOR_COMMAND_ID, async (accessor: ServicesAccessor, resource: UriComponents, id: string, columnAndOptions?: [EditorGroupColumn?, ITextEditorOptions?]) => {
 		const editorService = accessor.get(IEditorService);
 		const editorGroupsService = accessor.get(IEditorGroupsService);
 		const configurationService = accessor.get(IConfigurationService);
@@ -498,7 +498,7 @@ function registerOpenEditorAPICommands(): void {
 			group = editorGroupsService.getGroup(viewColumnToEditorGroup(editorGroupsService, columnArg)) ?? editorGroupsService.activeGroup;
 		}
 
-		const input = editorService.createEditorInput({ resource: URI.revive(resource) });
+		const input = await editorService.createEditorInput({ resource: URI.revive(resource) });
 		return editorService.openEditor(input, { ...optionsArg, override: id }, group);
 	});
 }

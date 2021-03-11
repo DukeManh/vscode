@@ -51,8 +51,8 @@ export class FileEditorInputFactory implements IEditorInputFactory {
 		return JSON.stringify(serializedFileEditorInput);
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): FileEditorInput {
-		return instantiationService.invokeFunction<FileEditorInput>(accessor => {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<FileEditorInput> {
+		return instantiationService.invokeFunction<Promise<FileEditorInput>>(async accessor => {
 			const serializedFileEditorInput: ISerializedFileEditorInput = JSON.parse(serializedEditorInput);
 			const resource = URI.revive(serializedFileEditorInput.resourceJSON);
 			const preferredResource = URI.revive(serializedFileEditorInput.preferredResourceJSON);
@@ -61,7 +61,7 @@ export class FileEditorInputFactory implements IEditorInputFactory {
 			const encoding = serializedFileEditorInput.encoding;
 			const mode = serializedFileEditorInput.modeId;
 
-			const fileEditorInput = accessor.get(IEditorService).createEditorInput({ resource, label: name, description, encoding, mode, forceFile: true }) as FileEditorInput;
+			const fileEditorInput = await accessor.get(IEditorService).createEditorInput({ resource, label: name, description, encoding, mode, forceFile: true }) as FileEditorInput;
 			if (preferredResource) {
 				fileEditorInput.setPreferredResource(preferredResource);
 			}

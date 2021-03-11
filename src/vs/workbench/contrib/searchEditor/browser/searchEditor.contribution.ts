@@ -75,7 +75,7 @@ class SearchEditorContribution implements IWorkbenchContribution {
 	) {
 
 		this.editorService.overrideOpenEditor({
-			open: (editor, options, group) => {
+			open: async (editor, options, group) => {
 				const resource = editor.resource;
 				if (!resource) { return undefined; }
 
@@ -133,7 +133,7 @@ class SearchEditorInputFactory implements IEditorInputFactory {
 		return JSON.stringify({ modelUri, dirty, config, name: input.getName(), matchRanges, backingUri: backingUri?.toString() } as SerializedSearchEditor);
 	}
 
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): SearchEditorInput | undefined {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<SearchEditorInput | undefined> {
 		const { modelUri, dirty, config, matchRanges, backingUri } = JSON.parse(serializedEditorInput) as SerializedSearchEditor;
 		if (config && (config.query !== undefined)) {
 			if (modelUri) {

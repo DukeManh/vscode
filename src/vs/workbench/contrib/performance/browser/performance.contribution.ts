@@ -30,7 +30,7 @@ Registry.as<IEditorInputFactoryRegistry>(Input.EditorInputFactories).registerEdi
 		serialize(): string {
 			return '';
 		}
-		deserialize(instantiationService: IInstantiationService): PerfviewInput {
+		async deserialize(instantiationService: IInstantiationService): Promise<PerfviewInput> {
 			return instantiationService.createInstance(PerfviewInput);
 		}
 	}

@@ -50,11 +50,11 @@ export abstract class AbstractFileDialogService implements IFileDialogService {
 	async defaultFilePath(schemeFilter = this.getSchemeFilterForWindow()): Promise<URI> {
 
 		// Check for last active file first...
-		let candidate = this.historyService.getLastActiveFile(schemeFilter);
+		let candidate = await this.historyService.getLastActiveFile(schemeFilter);
 
 		// ...then for last active file root
 		if (!candidate) {
-			candidate = this.historyService.getLastActiveWorkspaceRoot(schemeFilter);
+			candidate = await this.historyService.getLastActiveWorkspaceRoot(schemeFilter);
 		} else {
 			candidate = candidate && resources.dirname(candidate);
 		}
@@ -69,11 +69,11 @@ export abstract class AbstractFileDialogService implements IFileDialogService {
 	async defaultFolderPath(schemeFilter = this.getSchemeFilterForWindow()): Promise<URI> {
 
 		// Check for last active file root first...
-		let candidate = this.historyService.getLastActiveWorkspaceRoot(schemeFilter);
+		let candidate = await this.historyService.getLastActiveWorkspaceRoot(schemeFilter);
 
 		// ...then for last active file
 		if (!candidate) {
-			candidate = this.historyService.getLastActiveFile(schemeFilter);
+			candidate = await this.historyService.getLastActiveFile(schemeFilter);
 		}
 
 		if (!candidate) {

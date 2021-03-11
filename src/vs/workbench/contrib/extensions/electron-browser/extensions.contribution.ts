@@ -47,7 +47,7 @@ class RuntimeExtensionsInputFactory implements IEditorInputFactory {
 	serialize(editorInput: EditorInput): string {
 		return '';
 	}
-	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
+	async deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): Promise<EditorInput> {
 		return RuntimeExtensionsInput.instance;
 	}
 }

@@ -198,7 +198,7 @@ export class WorkbenchContextKeysHandler extends Disposable {
 		this._register(this.workingCopyService.onDidChangeDirty(workingCopy => this.dirtyWorkingCopiesContext.set(workingCopy.isDirty() || this.workingCopyService.hasDirty)));
 	}
 
-	private updateEditorContextKeys(): void {
+	private async updateEditorContextKeys(): Promise<void> {
 		const activeGroup = this.editorGroupService.activeGroup;
 		const activeEditorPane = this.editorService.activeEditorPane;
 		const visibleEditorPanes = this.editorService.visibleEditorPanes;
@@ -233,7 +233,7 @@ export class WorkbenchContextKeysHandler extends Disposable {
 			this.activeEditorIsReadonly.set(activeEditorPane.input.isReadonly());
 
 			const activeEditorResource = activeEditorPane.input.resource;
-			const editors = activeEditorResource ? this.editorService.getEditorOverrides(activeEditorResource, undefined, activeGroup) : [];
+			const editors = activeEditorResource ? await this.editorService.getEditorOverrides(activeEditorResource, undefined, activeGroup) : [];
 			this.activeEditorAvailableEditorIds.set(editors.map(([_, entry]) => entry.id).join(','));
 		} else {
 			this.activeEditorContext.reset();
