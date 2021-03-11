@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { promises } from 'fs';
 import { process } from 'vs/base/parts/sandbox/electron-sandbox/globals';
 import { AbstractTextFileService } from 'vs/workbench/services/textfile/browser/textFileService';
 import { ITextFileService, ITextFileStreamContent, ITextFileContent, IReadTextFileOptions, IWriteTextFileOptions, TextFileEditorModelState, ITextFileEditorModel } from 'vs/workbench/services/textfile/common/textfiles';
@@ -121,18 +120,6 @@ export class NativeTextFileService extends AbstractTextFileService {
 	}
 
 	async write(resource: URI, value: string | ITextSnapshot, options?: IWriteTextFileOptions): Promise<IFileStatWithMetadata> {
-
-		// check for overwriteReadonly property (only supported for local file://)
-		try {
-			if (options?.overwriteReadonly && resource.scheme === Schemas.file) {
-				const fileStat = await promises.stat(resource.fsPath);
-
-				// try to change mode to writeable
-				await promises.chmod(resource.fsPath, fileStat.mode | 0o200 /* File mode indicating writable by owner (fs.constants.S_IWUSR) */);
-			}
-		} catch (error) {
-			// ignore and simply retry the operation
-		}
 
 		// check for writeElevated property (only supported for local file://)
 		if (options?.writeElevated && resource.scheme === Schemas.file) {

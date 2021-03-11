@@ -188,7 +188,7 @@ export class DiskFileSystemProvider extends Disposable implements
 			}
 
 			// Open
-			handle = await this.open(resource, { create: true });
+			handle = await this.open(resource, { create: true, unlock: opts.unlock });
 
 			// Write content at once
 			await this.write(handle, 0, content, 0, content.byteLength);
@@ -209,6 +209,17 @@ export class DiskFileSystemProvider extends Disposable implements
 	async open(resource: URI, opts: FileOpenOptions): Promise<number> {
 		try {
 			const filePath = this.toFilePath(resource);
+
+			if (opts.create && opts.unlock) {
+				try {
+					const fileStat = await promises.stat(resource.fsPath);
+
+					// try to change mode to writeable
+					await promises.chmod(resource.fsPath, fileStat.mode | 0o200 /* File mode indicating writable by owner (fs.constants.S_IWUSR) */);
+				} catch (error) {
+					// ignore and simply retry the operation
+				}
+			}
 
 			let flags: string | undefined = undefined;
 			if (opts.create) {

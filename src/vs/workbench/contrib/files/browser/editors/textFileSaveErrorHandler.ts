@@ -9,7 +9,7 @@ import { basename, isEqual } from 'vs/base/common/resources';
 import { Action, IAction } from 'vs/base/common/actions';
 import { URI } from 'vs/base/common/uri';
 import { FileOperationError, FileOperationResult } from 'vs/platform/files/common/files';
-import { ITextFileService, ISaveErrorHandler, ITextFileEditorModel, IResolvedTextFileEditorModel, IWriteTextFileOptions } from 'vs/workbench/services/textfile/common/textfiles';
+import { ITextFileService, ISaveErrorHandler, ITextFileEditorModel, IResolvedTextFileEditorModel } from 'vs/workbench/services/textfile/common/textfiles';
 import { ServicesAccessor, IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
 import { IWorkbenchContribution } from 'vs/workbench/common/contributions';
@@ -135,9 +135,9 @@ export class TextFileSaveErrorHandler extends Disposable implements ISaveErrorHa
 		// Any other save error
 		else {
 			const isWriteLocked = fileOperationError.fileOperationResult === FileOperationResult.FILE_WRITE_LOCKED;
-			const triedToUnlock = isWriteLocked && fileOperationError.options && (fileOperationError.options as IWriteTextFileOptions).overwriteReadonly;
+			const triedToUnlock = isWriteLocked && fileOperationError.options?.unlock;
 			const isPermissionDenied = fileOperationError.fileOperationResult === FileOperationResult.FILE_PERMISSION_DENIED;
-			const canHandlePermissionOrLockedErrors = resource.scheme === Schemas.file; // https://github.com/microsoft/vscode/issues/48659
+			const canHandlePermissionOrLockedErrors = resource.scheme === Schemas.file; // https://github.com/microsoft/vscode/issues/48659 TODO
 
 			// Save Elevated
 			if (canHandlePermissionOrLockedErrors && (isPermissionDenied || triedToUnlock)) {
@@ -146,7 +146,7 @@ export class TextFileSaveErrorHandler extends Disposable implements ISaveErrorHa
 
 			// Unlock
 			else if (canHandlePermissionOrLockedErrors && isWriteLocked) {
-				primaryActions.push(this.instantiationService.createInstance(OverwriteLockedModelAction, model));
+				primaryActions.push(this.instantiationService.createInstance(UnlockModelAction, model));
 			}
 
 			// Retry
@@ -265,16 +265,16 @@ class SaveModelElevatedAction extends Action {
 
 	constructor(
 		private model: ITextFileEditorModel,
-		private triedToMakeWriteable: boolean
+		private triedToUnlock: boolean
 	) {
-		super('workbench.files.action.saveModelElevated', triedToMakeWriteable ? isWindows ? localize('overwriteElevated', "Overwrite as Admin...") : localize('overwriteElevatedSudo', "Overwrite as Sudo...") : isWindows ? localize('saveElevated', "Retry as Admin...") : localize('saveElevatedSudo', "Retry as Sudo..."));
+		super('workbench.files.action.saveModelElevated', triedToUnlock ? isWindows ? localize('overwriteElevated', "Overwrite as Admin...") : localize('overwriteElevatedSudo', "Overwrite as Sudo...") : isWindows ? localize('saveElevated', "Retry as Admin...") : localize('saveElevatedSudo', "Retry as Sudo..."));
 	}
 
 	async run(): Promise<void> {
 		if (!this.model.isDisposed()) {
 			await this.model.save({
 				writeElevated: true,
-				overwriteReadonly: this.triedToMakeWriteable,
+				writeUnlock: this.triedToUnlock,
 				reason: SaveReason.EXPLICIT
 			});
 		}
@@ -344,17 +344,17 @@ class SaveModelAsAction extends Action {
 	}
 }
 
-class OverwriteLockedModelAction extends Action {
+class UnlockModelAction extends Action {
 
 	constructor(
 		private model: ITextFileEditorModel
 	) {
-		super('workbench.files.action.overwrite', localize('overwrite', "Overwrite"));
+		super('workbench.files.action.unlock', localize('overwrite', "Overwrite"));
 	}
 
 	async run(): Promise<void> {
 		if (!this.model.isDisposed()) {
-			await this.model.save({ overwriteReadonly: true, reason: SaveReason.EXPLICIT });
+			await this.model.save({ writeUnlock: true, reason: SaveReason.EXPLICIT });
 		}
 	}
 }

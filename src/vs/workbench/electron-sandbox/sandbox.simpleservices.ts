@@ -190,7 +190,7 @@ class SimpleFileSystemProvider extends InMemoryFileSystemProvider { }
 export const simpleFileSystemProvider = new SimpleFileSystemProvider();
 
 function createFile(parent: string, name: string, content: string = ''): void {
-	simpleFileSystemProvider.writeFile(joinPath(workspaceResource, parent, name), VSBuffer.fromString(content).buffer, { create: true, overwrite: true });
+	simpleFileSystemProvider.writeFile(joinPath(workspaceResource, parent, name), VSBuffer.fromString(content).buffer, { create: true, overwrite: true, unlock: false });
 }
 
 function createFolder(name: string): void {

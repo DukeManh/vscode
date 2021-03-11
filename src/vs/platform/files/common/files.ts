@@ -221,10 +221,18 @@ export interface FileReadStreamOptions {
 export interface FileWriteOptions {
 	overwrite: boolean;
 	create: boolean;
+	unlock: boolean;
 }
 
-export interface FileOpenOptions {
-	create: boolean;
+export type FileOpenOptions = FileOpenForReadOptions | FileOpenForWriteOptions;
+
+export interface FileOpenForReadOptions {
+	create: false;
+}
+
+export interface FileOpenForWriteOptions {
+	create: true;
+	unlock: boolean;
 }
 
 export interface FileDeleteOptions {
@@ -858,6 +866,11 @@ export interface IWriteFileOptions {
 	 * The etag of the file. This can be used to prevent dirty writes.
 	 */
 	readonly etag?: string;
+
+	/**
+	 * Whether to attempt to unlock a file before writing.
+	 */
+	readonly unlock?: boolean;
 }
 
 export interface IResolveFileOptions {
